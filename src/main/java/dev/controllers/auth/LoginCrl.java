@@ -1,10 +1,12 @@
 package dev.controllers.auth;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Optional;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import dev.domains.User;
 import dev.services.LoginService;
 import dev.services.ServicesFactory;
+import dev.utils.HmacUtils;
 
 @WebServlet("/login")
 public class LoginCrl extends HttpServlet {
@@ -32,6 +35,18 @@ public class LoginCrl extends HttpServlet {
 
 		if (userOpt.isPresent()) {
 			User user = userOpt.get();
+
+			String message = user.getFirstname() + ";" + user.getLastname() + ";" + user.getLogin() + ";"
+					+ user.getAdmin();
+			String signature = HmacUtils.CreateSignature("secretSecret", message);
+
+			System.out.println("signature : " + signature);
+
+			String value = Base64.getEncoder().encodeToString((message + "|" + signature).getBytes());
+
+			Cookie cookie = new Cookie("user", value);
+			cookie.setHttpOnly(true);
+			resp.addCookie(cookie);
 			req.getSession().setAttribute("connectedUser", user);
 			resp.sendRedirect(req.getContextPath() + "/users/list");
 		} else {

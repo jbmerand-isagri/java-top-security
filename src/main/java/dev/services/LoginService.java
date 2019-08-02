@@ -22,7 +22,7 @@ public class LoginService {
 			throw new AppException("at least 2 users with same login");
 		}
 
-		if (BcryptUtils.checkPw(password, results.get(0).getPassword())) {
+		if (results.size() > 0 && BcryptUtils.checkPw(password, results.get(0).getPassword())) {
 			results2 = new DbUtils().executeSelect(String.format("select * from user where login='%s'", login),
 					resultSet -> new DbUtils().resultSetToUser(resultSet));
 		}
